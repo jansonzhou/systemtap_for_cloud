@@ -1,0 +1,49 @@
+//probe qemu.kvm.bdrv_mon_event = process("/usr/libexec/qemu-kvm").function("bdrv_mon_event")
+//{
+//  bdrv = $arg1;
+//  action = $arg2;
+//  error = $arg3;
+//  is_read = $arg4;
+//}
+
+//probe qemu.kvm.bdrv_mon_event { 
+//  printf("qemu bdrv_mon_event performed\n");
+//  exit()
+//}
+
+probe qemu.kvm.vm_state_notify {
+  printf("qemu.kvm.vm_state_notify ");
+  printf("%s ",probefunc());
+  printf("running=%p reason=%p\n",running,reason);
+}
+
+probe libvirt.qemu.monitor_send_msg { 
+  printf("libvirt.qemu.monitor_send_msg ");
+  printf("mon=%p msg=%s fd=%d \n",mon,msg,fd)
+}
+
+probe process("/usr/sbin/libvirtd").function("qemuMonitorSend") {
+  printf("hahah\n");
+  printf("libvirt.qemu.qemuMonitorSend \n");
+}
+
+probe process("/usr/sbin/libvirtd").function("qemuMonitorSend").return {
+  printf("hahah return\n");
+  printf("libvirt.qemu.qemuMonitorSend return \n ");
+}
+
+probe libvirt.qemu.monitor_recv_reply  { 
+  printf("libvirt.qemu.monitor_send_msg ");
+  printf("mon=%p reply=%s \n",mon,reply)
+}
+
+
+probe libvirt.qemu.monitor_recv_event { 
+  printf("libvirt.qemu.monitor_recv_event: ");
+  printf("mon=%p event=%s \n",mon,event)
+}
+
+//probe libvirt.qemu.monitor_io_process {
+//  printf("libvirt.qemu.monitor_io_process: ");
+//  printf("mon=%p buf=%s len=%d \n",mon, buf, len);
+//}

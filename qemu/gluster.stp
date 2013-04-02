@@ -1,0 +1,5 @@
+probe qemu.kvm.bdrv_mon_event = process("/usr/sbin/glusterfs").function("socket_proto_state_machine")
+{
+	printf("hhahah\n");
+}
+

@@ -1,0 +1,95 @@
+probe qemu.kvm.virtqueue_fill { 
+  printf("virtqueue_fill ");
+  printf("vq=%p elem=%p len=%p idx=%p\n",vq,elem,len,idx);
+//  print_ubacktrace();
+}
+
+probe qemu.kvm.virtqueue_flush { 
+  printf("virtqueue_flush ");
+  printf("vq=%p count=%p \n",vq,count);
+//  print_ubacktrace();
+}
+
+probe qemu.kvm.virtqueue_pop { 
+  printf("virtqueue_pop ");
+  printf("vq=%p elem=%p in_num=%p out_num=%p \n",vq,elem,in_num,out_num);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.virtio_queue_notify { 
+  printf("virtio_queue_notify ");
+  printf("vdev=%p n=%p vq=%p\n",vdev,n,vq);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.virtio_irq { 
+  printf("virtio_irq ");
+  printf("vq=%p \n",vq);
+ // print_ubacktrace();
+}
+
+probe qemu.kvm.virtio_notify { 
+  printf("virtio_notify ");
+  printf("vdev=%p vq=%p  \n",vdev,vq);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.multiwrite_cb { 
+  printf("multiwrite_cb ");
+  printf("mcb=%p ret=%p \n",mcb,ret);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.bdrv_aio_multiwrite { 
+  printf("bdrv_aio_multiwrite");
+  printf("mcb=%p num_callbacks=%p num_reqa=%p \n",mcb,num_callbacks, num_reqs);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.bdrv_aio_multiwrite_earlyfail { 
+  printf("bdrv_aio_multiwrite_earlyfail ");
+  printf("mcb=%p\n",mcb);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.bdrv_aio_multiwrite_latefail { 
+  printf("bdrv_aio_multiwrite_latefail ");
+  printf("mcb=%p i=%p \n",mcb,i);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.bdrv_aio_readv { 
+  printf("bdrv_aio_readv ");
+  printf("bs=%p sector_num=%p nb_sectors=%p opaque=%p\n",bs,sector_num,nb_sectors,opaque);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.bdrv_aio_writev { 
+  printf("bdrv_aio_writev ");
+  printf("bs=%p sector_num=%p nb_sectors=%p opaque=%p \n",bs,sector_num,nb_sectors, opaque);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.bdrv_lock_medium { 
+  printf("bdrv_lock_medium ");
+  printf("bs=%p locked=%p \n",bs,locked);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.virtio_blk_rw_complete { 
+  printf("virtio_blk_rw_complete ");
+  printf("req=%p ret=%p \n",req,ret);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.virtio_blk_handle_write { 
+  printf("virtio_blk_handle_write ");
+  printf("req=%p sector=%p nsectors=%p\n",req,sector,nsectors);
+  //print_ubacktrace();
+}
+
+probe qemu.kvm.paio_submit { 
+  printf("paio_submit ");
+  printf("acb=%p opaque=%p sector_num=%p nb_sectors=%p type=%p\n",acb, opaque, sector_num, nb_sectors, type);
+  //print_ubacktrace();
+}
