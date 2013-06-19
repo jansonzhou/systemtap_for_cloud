@@ -1,0 +1,115 @@
+#!/usr/bin/env stap 
+#
+# Copyright (C) 2007 Oracle Corp.
+#
+# provide the percentage of random and sequential I/O on the system
+#
+# bought idea from Dtrace
+#
+# GNU General Public License (GPL); either version 2, or (at your option) any
+# later version.
+#
+#
+# Usage:
+#  ./iopattern.stp 
+#
+
+global disk_loc
+global disk_r,disk_w,disk_ran,disk_cnt,disk_min,disk_max
+
+probe ioblock.end{
+
+	bytes_done = bytes_done > size ? bytes_done:size
+
+	/*WRITE 1*/
+        disk_r += (rw & 1) ? 0 : bytes_done
+        disk_w += (rw & 1) ? bytes_done: 0
+       
+        /*Not precise at first time, disk_ran = 0 */
+       	disk_ran += (sector*512 == disk_loc[devname]) ? 0 : 1
+        disk_cnt++
+
+       	disk_min = disk_min == 0 ? bytes_done :(disk_min > bytes_done ? bytes_done : disk_min);
+       	disk_max = disk_max < bytes_done ? bytes_done : disk_max;
+
+        /*record the location*/
+	disk_loc[devname] += sector*512 + bytes_done
+}
+
+probe begin {
+        printf("%4s %4s %6s %6s %6s %6s %8s %8s\n",
+            "%RAN", "%SEQ", "COUNT", "MIN", "MAX", "AVG", "R(Kb)", "W(Kb)")
+
+}
+
+probe timer.ms(5000)
+{
+        /* calcluate average performance */
+        disk_avg = disk_cnt > 0 ? (disk_r + disk_w) / disk_cnt : 0
+
+        /* convert to Kbytes */
+        disk_r /= 1024
+        disk_w /= 1024
+
+        /* convert to percentage */
+        disk_ran = disk_cnt == 0 ? 0 : (disk_ran * 100) / disk_cnt
+        disk_seq = disk_cnt == 0 ? 0 : 100 - disk_ran
+
+
+        printf("%4d %4d %6d %6d %6d %6d %8d %8d\n",
+            disk_ran, disk_seq, disk_cnt, disk_min, disk_max, disk_avg,
+            disk_r, disk_w)
+
+        /* clear data */
+        disk_min = 0
+        disk_max = 0
+        disk_cnt = 0
+        disk_ran = 0
+        disk_r = 0
+        disk_w = 0
+}
+
+#!/usr/bin/env stap 
+#
+# Copyright (C) 2007 Oracle Corp.
+#
+# Get the rough status of seeking in block I/O 
+#
+# bought idea from Dtrace
+#
+# GNU General Public License (GPL); either version 2, or (at your option) any
+# later version.
+#
+#
+# Usage:
+#  ./seeksize.stp 
+#
+
+global disk_head
+global disk_distance
+
+probe ioblock.request{
+	/*calculate the movement distance*/
+	distance = sector - disk_head[devname] > 0 ? sector-disk_head[devname] : disk_head[devname]-sector
+	if (disk_head[devname] != 0 ) /*skip the first time, no last head position*/
+		disk_distance[devname] <<< distance
+	disk_head[devname] = size/512 + sector
+}
+
+probe begin {
+	print("Collecting data... Type Ctrl-C to exit and display results\n")
+}	
+
+probe end {
+        foreach ([name] in disk_distance) {
+                printf("Device %s\n", name)
+                printf("Count:   %d movements\n", @count(disk_distance[name]))
+                printf("Sum:     %d sectors\n", @sum(disk_distance[name]))
+                printf("Average: %d sectors\n", @avg(disk_distance[name]))
+                printf("Min:     %d sectors\n", @min(disk_distance[name]))
+                printf("Max:     %d sectors\n", @max(disk_distance[name]))
+                print("\nSeek by sectors \n")
+                print(@hist_log(disk_distance[name]))
+                printf("-------------------------------------------------------\n\n");
+	}
+}
