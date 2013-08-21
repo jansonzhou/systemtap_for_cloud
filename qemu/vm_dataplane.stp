@@ -1,0 +1,33 @@
+
+probe process("/usr/libexec/qemu-kvm").function("ioq_put_iocb") {
+  printf("ioq_put_iocb \n");
+}
+
+probe process("/usr/libexec/qemu-kvm").function("ioq_get_iocb") {
+  printf("ioq_get_iocb \n");
+  print_ubacktrace();
+}
+
+
+probe process("/usr/libexec/qemu-kvm").function("process_request") {
+  printf("process_request \n");
+}
+
+probe process("/usr/libexec/qemu-kvm").function("notify_guest") {
+  printf("notify_guest \n");
+  print_ubacktrace();
+}
+
+probe process("/usr/libexec/qemu-kvm").function("handle_notify") {
+  printf("handle_notify \n");
+  print_ubacktrace();
+}
+
+
+probe process("/usr/libexec/qemu-kvm").function("complete_request") {
+  printf("complete_request \n");
+}
+
+
+
+

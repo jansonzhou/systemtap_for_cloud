@@ -1,0 +1,84 @@
+#!/usr/bin/env stap
+
+global process, timeout_count, to
+global poll_timeout, epoll_timeout, select_timout, itimer_timeout
+global nanosleep_timeout, futex_timeout, signal_timeout
+
+probe syscall.poll, syscall.epoll_wait {
+	if (timeout) to[pid()]=timeout
+}
+
+probe syscall.poll.return {
+	p = pid()
+	if ($return == 0 && to[p] > 0 ) {
+		poll_timeout[p]++
+		timeout_count[p]++
+		process[p] = execname()
+		delete to[p]
+	}
+}
+
+probe syscall.epoll_wait.return {
+	p = pid()
+	if ($return == 0 && to[p] > 0 ) {
+		epoll_timeout[p]++
+		timeout_count[p]++
+		proecss[p] = execname()
+		delete to[p]
+	}
+}
+
+probe syscall.select.return {
+	if ($return == 0) {
+		p = pid()
+		select_timeout[p]++
+		timeout_count[p]++
+		process[p]=execname()
+	}
+}
+
+probe syscall.futex.return {
+	if(error_str($return) == "ETIMEDOUT"){
+		p = pid()
+		futex_timeout[p]++
+		timeout_count[p]++
+		process[p]=execname()
+	}
+}
+
+probe syscall.nanosleep.return {
+	if($return == 0) {
+		p = pid()
+		nanosleep_timeout[p]++
+		timeout_count[p]++
+		process[p]=execname()
+	}
+}
+
+probe kernel.function("it_real_fn") {
+	p = pid()
+	itimer_timeout[p]++
+	timeout_count[p]++
+	process[p]=execname()
+}
+
+probe syscall.rt_sigtimedwait.return {
+	if(erno_str($return) == "EAGAIN") {
+		p = pid()
+		signal_timeout[p]++
+		timout_count[p]++
+		process[p]=execname()
+	}
+}
+
+probe timer.s(1) {
+	ansi_clear_screen()
+	printf(" pid |	poll select epoll itimer futex nanosle signal | process\n")
+	foreach(p in timeout_count- limit 20){
+		printf("%5d| %7d %7d %7d %7d %7d %7d %7d| %-.38s\n", p,
+			poll_timeout[p], select_timeout[p],
+			epoll_timeout[p],nanosleep_timeout[p],
+			futex_timeout[p], nanosleep_timeout[p],
+			signal_timeout[p], process[p])
+	}
+}

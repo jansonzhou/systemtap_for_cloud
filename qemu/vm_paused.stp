@@ -1,0 +1,41 @@
+probe process("/usr/libexec/qemu-kvm").function("bdrv_emit_qmp_error_event"){
+    printf("bdrv_emit_qmp_error_event call\n")
+    print_ubacktrace()
+}
+
+probe process("/usr/libexec/qemu-kvm").function("virtio_blk_handle_rw_error") {
+    printf("virtio_blk_handle_rw_error\n")
+    print_ubacktrace()
+}
+
+
+probe qemu.kvm.virtio_blk_rw_complete
+{
+
+    printf ("\n On Virtio Block Request:%p \n Return Code Received :%d", $req, $arg2)
+
+	if ( $arg2 ) {
+
+        vDevname = @cast(req, "VirtIOBlockReq")->dev->vdev->name$
+            
+	    vSerialN = @cast(req, "VirtIOBlockReq")->dev->blk->serial$
+            
+	    printf ("\n The Virtio Device : %s \n Serial No: %s \n", vDevname, vSerialN)
+            
+	    vDevSector = @cast(req, "VirtIOBlockReq")->out->sector
+
+	    vDevSectorMask = @cast(req, "VirtIOBlockReq")->dev->sector_mask
+
+	    if ( vDevSector & vDevSectorMask) {
+			printf ("\n Case 1: sector :%d \t\t sector_mask: %d", vDevSector, vDevSectorMask)
+	    }
+
+        l_blk_size = @cast(req, "VirtIOBlockReq")->dev->conf->logical_block_size
+           
+        qiov = @cast(req, "VirtIOBlockReq")->qiov->size
+           
+        if (l_blk_size & qiov) {
+	    	printf (" \n Case 2: Logical Block Size: %d \t Qemu IO vector size: %d \n", l_blk_size, qiov)
+	    }
+     }
+}

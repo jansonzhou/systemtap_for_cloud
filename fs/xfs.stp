@@ -1,0 +1,13 @@
+
+probe module("xfs").function("xfs_file_open") {
+	printf("func %s inode no: %d \n", pn(), $inode->i_ino)
+}
+
+probe module("xfs").function("*open*").return {
+	printf("func %s ret: %d\n", pn(), $return)
+}
+
+probe module("xfs").function("*read*"), module("xfs").function("*write*") {
+	printf("func %s  \n", pn())
+	print_backtrace()
+}

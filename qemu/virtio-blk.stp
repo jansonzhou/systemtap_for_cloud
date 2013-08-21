@@ -30,27 +30,33 @@
 
 
 probe qemu.kvm.bdrv_*, qemu.kvm.virtio_blk_*, qemu.kvm.paio_*
-
 {
 
-
-printf(" \n -> %s(%s) \n ",  probefunc(), $$parms )
+    printf(" \n -> %s(%s) \n ",  probefunc(), $$parms )
 
 }
 
-
+probe process("/usr/libexec/qemu-kvm").function("virtio_blk_handle_write")
+{
+    size = $req->qiov.size
+    logical_block_size = $req->dev->conf->logical_block_size
+    printf("virtio_blk_handle_write  req size: %d  logical_block_size: %d\n", size, logical_block_size)
+    
+    sector = $req->out->sector
+    sector_mask = $req->dev->sector_mask
+    sector_error = sector & sector_mask
+    printf("virtio_blk_handle_write sector: %d sector_mask: %d error: %d\n", sector, sector_mask, sector_error)
+}
 
 
 probe qemu.kvm.virtio_blk_rw_complete
-
 {
 
-        printf ("\n On Virtio Block Request:%p \n Return Code Received :%d", $req, $arg2)
+    printf ("\n On Virtio Block Request:%p \n Return Code Received :%d", $req, $arg2)
 
-	if ( $arg2 )
-     	{
+	if ( $arg2 ) {
 
-            vDevname = @cast(req, "VirtIOBlockReq")->dev->vdev->name$
+        vDevname = @cast(req, "VirtIOBlockReq")->dev->vdev->name$
             
 	    vSerialN = @cast(req, "VirtIOBlockReq")->dev->blk->serial$
             
@@ -60,18 +66,27 @@ probe qemu.kvm.virtio_blk_rw_complete
 
 	    vDevSectorMask = @cast(req, "VirtIOBlockReq")->dev->sector_mask
 
-	    if ( vDevSector & vDevSectorMask)
-	    {
+	    if ( vDevSector & vDevSectorMask) {
 			printf ("\n Case 1: sector :%d \t\t sector_mask: %d", vDevSector, vDevSectorMask)
-	    } 
+        }
 
-            l_blk_size = @cast(req, "VirtIOBlockReq")->dev->conf->logical_block_size
+        l_blk_size = @cast(req, "VirtIOBlockReq")->dev->conf->logical_block_size
            
-            qiov = @cast(req, "VirtIOBlockReq")->qiov->size
-           
-            if (l_blk_size & qiov)
-	    {
-	    		printf (" \n Case 2: Logical Block Size: %d \t Qemu IO vector size: %d \n", l_blk_size, qiov)
+        qiov = @cast(req, "VirtIOBlockReq")->qiov->size
+        
+        /*
+        if (l_blk_size & qiov) {
+	    	printf (" \n Case 2: Logical Block Size: %d \t Qemu IO vector size: %d \n", l_blk_size, qiov)
 	    }
-     	}
+	    */
+	    
+	    if (qiov % l_blk_size) {
+    	    	printf (" \n Case 2: Logical Block Size: %d \t Qemu IO vector size: %d \n", l_blk_size, qiov)
+    	}
+	    
+	    last_avail_idx = @cast(req,"VirtIOBlockReq")->dev->vq->last_avail_idx
+	    signalled_used = @cast(req,"VirtIOBlockReq")->dev->vq->signalled_used
+
+	    printf("\n\n virtio last_avail_idx :%d  signalled_used :%d  \n", last_avail_idx, signalled_used)
+     }
 }

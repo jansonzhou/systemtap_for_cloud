@@ -1,0 +1,27 @@
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("vhost_log_sync")
+{
+  printf("vhost_log_sync\n")
+}
+
+
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("*@vhost_net.c")
+{
+  printf("vhost_net_initi %s\n", probefunc());
+  print_ubacktrace();
+}
+
+
+global counts
+
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("*@vhost.c")
+{
+  printf("\n");
+  printf("vhost %s\n", probefunc());
+  print_ubacktrace();
+  counts[pn()]++
+}
+
+probe end {
+  foreach(n+ in counts)
+    printf("%s= %d\n", n, counts[n])
+}

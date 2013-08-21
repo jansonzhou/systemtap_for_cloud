@@ -1,0 +1,19 @@
+global locations
+
+probe begin { printf("Moniotoring for dropped packets\n")
+probe end { printf("Stopping dropped packet monitor\n")
+
+probe kernel.trace("kfree_skb")
+{
+	locations[$locaion]<<<1
+}
+
+probe timer.sec(5)
+{
+	printf("\n")
+	foreach (l in locations-){
+		printf("%d packets dropped at %s\n",
+			@count(locations[l],symname(l))
+	}
+	delete locaions
+}

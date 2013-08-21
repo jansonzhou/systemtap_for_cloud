@@ -1,0 +1,9 @@
+#!/usr/bin/stap
+
+probe process("/usr/libexec/qemu-kvm").function("vhost_log_sync")
+{
+  printf("vhost_log_sync\n")
+}
+
+
+

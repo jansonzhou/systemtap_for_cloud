@@ -1,0 +1,55 @@
+/*
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("memory_listener_register")
+{
+  printf("memory_listener_register\n")
+}
+
+
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("address_space_map")
+{
+  printf("address_space_map\n")
+}
+
+
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("cpu_physical_memory_map")
+{
+  printf("cpu_physical_memory_map\n")
+}
+
+
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("dma_memory_map")
+{
+  printf("dma_memory_map\n")
+}
+*/
+
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("vhost_log_sync")
+{
+  printf("vhost_log_sync\n")
+  print_ubacktrace();
+}
+
+
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("memory_region_sync_dirty_bitmap")
+{
+  printf("memory_region_sync_dirty_bitmap\n")
+  printf("regin name %x\n", $mr->name);
+  printf("size low %d high %d addr %d \n", $mr->size->lo, $mr->size->hi, $mr->addr);
+  /*print_ubacktrace(); */
+
+}
+
+
+/*
+global memcounts
+
+probe process("/root/dataplane/qemu/x86_64-softmmu/qemu-kvm").function("*@memory.c")
+{
+  memcounts[pn()]++
+}
+
+probe end {
+  foreach(n+ in memcounts)
+    printf("%s= %d\n", n, memcounts[n])
+}
+*/

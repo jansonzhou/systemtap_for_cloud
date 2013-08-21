@@ -1,5 +1,11 @@
-probe qemu.kvm.bdrv_mon_event = process("/usr/sbin/glusterfs").function("socket_proto_state_machine")
+global glustercounts
+probe  process("/usr/libexec/qemu-kvm").function("*@gluster.c")
 {
-	printf("hhahah\n");
+  glustercounts[pn()]++
+}
+
+probe end {
+  foreach(n+ in glustercounts)
+    printf("%s= %d\n", n, glustercounts[n])
 }
 

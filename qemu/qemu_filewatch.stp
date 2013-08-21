@@ -1,0 +1,7 @@
+#!/usr/bin/env stap
+
+probe vfs.write {
+  if (ino == $1)
+    print ("%s(%d) %s 0x%x/%u\n",
+      execname(), pid(), probefunc(), dev, ino)
+}
