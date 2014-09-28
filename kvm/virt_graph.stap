@@ -1,0 +1,18 @@
+global bts[20480]
+
+#probe module("kvm").function("*@arch/x86/kvm/mmu.c") {
+probe module("kvm").function("*@virt/kvm/ioapic.c") {
+    bts[backtrace()] <<< 1
+}
+
+probe module("kvm").function("*@virt/kvm/irqchip.c") {
+      bts[backtrace()] <<< 1
+}
+
+
+probe end {
+    foreach (bt in bts) {
+        print_stack(bt)
+        printf("\t%d\n", @count(bts[bt]))
+    }
+}

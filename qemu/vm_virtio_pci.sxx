@@ -1,0 +1,84 @@
+//probe process("$^exec_path").function("*virtio_pci*") {
+//    printf("catch: %s\n", pn())
+//}
+
+
+//probe process("$^exec_path").function("msix_notify") {
+//    devname = @cast($dev, "PCIDevice")->name$
+//    printf("msix_notify: name %s, vector %x \n", devname, $vector)
+//}
+
+//probe process("$^exec_path").function("virtio_blk*") {
+//    printf("virtio_blk %s\n", pn())
+//}
+
+# probe process("/usr/bin/qemu-kvm").function("*virtio_pci*") {
+#     printf("catch %s\n", pn());
+# }
+# 
+# 
+# probe process("/usr/bin/qemu-kvm").function("*virtio_rng*") {
+#     printf("catch %s\n", pn());
+# }
+# 
+# probe process("/usr/bin/qemu-kvm").function("virtio_pci_set_guest_notifier") {
+#     printf("catch %s\n", pn());
+# }
+# 
+# 
+# probe process("/usr/bin/qemu-kvm").function("virtio_pci_set_host_notifier") {
+#     printf("catch %s\n", pn());
+# }
+# 
+# 
+# probe process("/usr/bin/qemu-kvm").function("virtio_mmio*") {
+#     printf("catch %s\n", pn());
+# }
+# 
+# 
+# probe process("/usr/bin/qemu-kvm").function("virtio_queue*") {
+#     printf("catch %s\n", pn());
+# }
+# # not found virtio_rng_device_realize
+# probe process("/usr/bin/qemu-kvm").function("*virtio_rng_device_realize*") {
+#     printf("catch %s\n", pn());
+# }
+
+
+# probe process("/usr/bin/qemu-kvm").function("virtio_pci_config_read") {
+#     printf("virtio_pci_config_read: size  %d\n", $size)
+# }
+# 
+# probe process("/usr/bin/qemu-kvm").statement("*@virtio-pci.c:400") {
+#     printf("virtio_pci_config_read: config %d\n", $config)
+# }
+
+global queue_notify_stats
+global queue_notify_vq_stats
+
+probe process("/usr/bin/qemu-kvm").function("virtio_queue_notify") {
+    queue_notify_stats[ubacktrace()] += 1
+    print_ustack(ubacktrace())
+    printf("\n")
+}
+
+probe process("/usr/bin/qemu-kvm").function("virtio_queue_notify_vq") {
+    queue_notify_vq_stats[ubacktrace()] += 1
+    print_ustack(ubacktrace())
+    printf("\n")
+}
+
+
+probe end {
+    foreach (qn+ in queue_notify_stats) {
+        printf("%s\n", print_ustack(qn))
+        printf("%d\n", queue_notify_vq_stats[qn])
+        printf("#######################\n")
+    }
+    
+    foreach (qn+ in queue_notify_vq_stats) {
+        printf("%s\n", print_ustack(qn))
+        printf("%d\n", queue_notify_vq_stats[qn])
+        printf("#######################\n")
+    }
+}

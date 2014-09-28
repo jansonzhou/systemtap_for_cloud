@@ -1,0 +1,31 @@
+
+
+
+# probe module("kvm").function("kvm_make_request") {
+#   printf("kvm_make_request: req \n");
+#   if ($req == 4) {
+#     printf("kvm_make_request: req %d\n", $req);
+#     print_stack(backtrace())
+#   }
+# }
+# 
+# mmu_check_root
+# 
+# kvm_multiple_exception
+#
+# kvm_vcpu_ioctl_x86_set_mce
+
+probe module("kvm").function("kvm_multiple_exception") {
+  printf("kvm_multiple_exception: ");
+  print_stack(backtrace());
+}
+
+probe module("kvm").function("mmu_check_root") {
+  printf("mmu_check_root: ");
+  print_stack(backtrace());
+}
+
+probe module("kvm").function("kvm_vcpu_ioctl_x86_set_mce") {
+  printf("kvm_vcpu_ioctl_x86_set_mce: ");
+  print_stack(backtrace());
+}

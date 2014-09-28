@@ -1,0 +1,19 @@
+
+global rr_data_stack
+global rr_intr_stack
+
+# probe module("kvm_intel").function("vmx_record_replay_data") {
+#     rr_data_stack[backtrace()] += 1
+# }
+
+probe module("kvm").function("*") {
+    printf("%s\n", pn())
+}
+
+probe module("kvm_intel").function("*") {
+  printf("%s\n", pn())
+}
+
+
+probe end {  
+}

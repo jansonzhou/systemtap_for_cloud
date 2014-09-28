@@ -1,0 +1,60 @@
+#!/usr/bin/stap
+# fang.xu
+
+global quit = 0;
+global handler_count;
+global main_loop_wait_poll_ret_count = 0;
+
+global handlers;
+global G_IO_IN = 0x001;
+global G_IO_HUP = 0x010;
+global G_IO_ERR = 0x008;
+global G_IO_OUT = 0x004;
+
+probe process("/usr/bin/qemu-kvm").statement("*@iohandler.c:151")
+{
+	if //(($ioh->fd_read != 0 || $ioh->fd_write != 0)) 
+      //&& 
+      ((($revents & (G_IO_IN | G_IO_HUP | G_IO_ERR))
+      || ($revents & (G_IO_OUT | G_IO_ERR)))
+      ) {
+		  func = sprintf("%s\n", usymname($ioh->fd_read));
+		  handlers[func] <<< 1;
+  	} 
+}
+
+probe process("/usr/bin/qemu-kvm").function("pipe_read") {
+	handler_count[probefunc()] <<< 1;
+}
+
+probe process("/usr/bin/qemu-kvm").function("watch_read") {
+	handler_count[probefunc()] <<< 1;
+}
+
+probe process("/usr/bin/qemu-kvm").function("virtio_queue_host_notifier_read") {
+	handler_count[probefunc()] <<< 1;
+}
+
+probe process("/usr/bin/qemu-kvm").function("sigfd_handler") {
+	handler_count[probefunc()] <<< 1;
+}
+
+probe process("/usr/bin/qemu-kvm").statement("*@main-loop.c:229") {
+  main_loop_wait_poll_ret_count += $ret  
+}
+
+probe timer.s(20) {
+	quit = 1;
+	foreach (h in handler_count) {
+		printf("%s: %d\n", h, @count(handler_count[h]));
+	}	
+  printf("main loop wait poll events: %d.\n", main_loop_wait_poll_ret_count);
+	
+  foreach (h in handlers) {
+		printf("%s: %d\n", h, @count(handlers[h]));
+	}
+	
+  exit();
+
+}
+

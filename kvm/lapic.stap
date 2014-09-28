@@ -1,0 +1,17 @@
+
+
+# probe module("kvm").function("*accept_events*") {
+# 	print_stack(backtrace())
+# }
+
+probe module("kvm").function("kvm_vcpu_deliver_sipi_vector") {
+	print_stack(backtrace())
+}
+
+# apic_send_ipi
+# kvm_write_guest_cached
+
+probe module("kvm").function("*send*") {
+	print_stack(backtrace())
+	println("\n")
+}

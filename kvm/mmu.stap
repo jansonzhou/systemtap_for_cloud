@@ -1,0 +1,35 @@
+global stats
+
+
+# probe module("kvm").function("kvm_assigned_dev_msix") {
+#     printf("catch %s\n", pn())
+#     msix_stats[backtrace()] += 1
+# }
+# 
+# probe module("kvm").function("*@irq_comm.c") {
+#     printf("catch %s\n", pn())
+# }
+
+# probe module("kvm").function("*page_fault*") {
+# #printf("catch %s\n", pn())
+#     stats[backtrace()] += 1
+# }
+# 
+# probe module("kvm_intel").function("*page_fault*") {
+# #printf("catch %s\n", pn())
+#     stats[backtrace()] += 1
+# }
+
+
+probe module("kvm").function("*__direct_map*") {
+#printf("catch %s\n", pn())
+    stats[backtrace()] += 1
+}
+
+
+probe end {
+    foreach (f+ in stats) {
+        printf("%s \t %d\n", print_stack(f), stats[f])
+    }
+    
+}

@@ -1,0 +1,12 @@
+global vfs_count;
+
+probe _vfs.* {
+	vfs_count[probefunc()] <<< 1;
+}
+
+probe end {
+	quit = 1;
+	foreach (f in vfs_count) {
+		printf("%s: %d\n", f, @count(vfs_count[f]));
+	}
+}

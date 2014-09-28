@@ -1,0 +1,30 @@
+global msix_stats
+global msi_stats
+
+
+# probe module("kvm").function("kvm_assigned_dev_msix") {
+#     printf("catch %s\n", pn())
+#     msix_stats[backtrace()] += 1
+# }
+# 
+# probe module("kvm").function("*@irq_comm.c") {
+#     printf("catch %s\n", pn())
+# }
+
+probe module("kvm").function("*eoi*") {
+    printf("catch %s\n", pn())
+    msi_stats[backtrace()] += 1
+}
+
+
+probe end {
+    foreach (f+ in msi_stats) {
+        printf("%s \t %d\n", f, msix_stats[f])
+    }
+    
+    foreach (m+ in msi_stats) {
+        printf("%s\n", print_stack(m))
+        printf("%d\n", msi_stats[m])
+        printf("#######################\n")
+    }
+}

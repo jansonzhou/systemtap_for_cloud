@@ -1,0 +1,29 @@
+global ioeventfd_stats
+global ioeventfd_write_stats
+
+probe module("kvm").function("*irqfd*") {
+    printf("catch %s\n", pn())
+}
+
+probe module("kvm").function("*ioeventfd*") {
+    printf("catch %s\n", pn())
+    ioeventfd_stats[pn()] += 1
+}
+
+probe module("kvm").function("ioeventfd_write") {
+    ioeventfd_write_stats[backtrace()] += 1
+}
+
+probe end {
+    foreach (f+ in ioeventfd_stats) {
+        printf("%s \t %d\n", f, ioeventfd_stats[f])
+    }
+    
+    
+    foreach (wb+ in ioeventfd_write_stats) {
+
+        printf("%s\n", print_stack(wb))
+        printf("%d\n", ioeventfd_write_stats[wb])
+        printf("#######################\n")
+    }
+}

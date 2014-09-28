@@ -1,0 +1,22 @@
+# probe module("kvm").function("kvm_mmu_page_fault") {
+#     printf("kvm_mmu_page_fault: %d\n", $cr2)
+#     #print_stack(backtrace())
+#     if ($cr2 == 12582912) {
+#         printf("kvm_mmu_page_fault: catch c00000\n")
+#         print_stack(backtrace())
+#     }
+# }
+
+# probe module("kvm").function("kvm_apic_set_irq") {
+#     print_stack(backtrace())
+# }
+
+# probe module("kvm").function("*@arch/x86/kvm/lapic.c") {
+#     
+#     print_stack(backtrace())
+#     printf("\n")
+# }
+
+probe module("kvm").function("kvm_get_msr_common") {
+    printf("kvm_get_msr_common: msr %x\n", $msr)
+}

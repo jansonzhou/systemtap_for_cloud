@@ -1,0 +1,6 @@
+
+
+
+probe module("ext4").function("*read*"), module("ext4").function("*write*") {
+	printf("func %s  \n", pn())
+}

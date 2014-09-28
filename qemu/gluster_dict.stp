@@ -1,0 +1,7 @@
+
+probe process("/usr/lib64/libglusterfs.so.0").statement("*@dict.c:304")
+{
+    
+    # pair->hash_next = this->members[hashval];
+    printf("gluster dict set: pair->next %x  ; member hasval %x", $pair->hash_next, $this->members[hashval]);	
+}

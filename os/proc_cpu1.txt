@@ -1,0 +1,19 @@
+#Argument on line ($1) is the number of cpus - 1 in the system 
+global sample
+global time
+probe timer.profile {
+	sample[execname(), tid()] <<< cpu()
+}
+
+probe begin {
+   time = gettimeofday_s()
+}
+
+probe end {
+	foreach([p, t] in sample){
+		printf("process: %-20s TID: %5d\ncpu\tsamles\n", p, t) 
+		print (@hist_linear(sample[p,t], 0, $1, 1))
+	}
+	time = gettimeofday_s() - time 
+	printf("\nTotal............................: %5d secs.\n", time);
+}

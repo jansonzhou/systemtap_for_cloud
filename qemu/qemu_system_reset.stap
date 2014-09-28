@@ -1,0 +1,18 @@
+
+
+probe process("/usr/bin/qemu-kvm").function("qemu_system_reset_request") {
+    printf("qemu_system_reset:\n")
+    print_ustack(ubacktrace())
+}
+
+
+probe process("/usr/bin/qemu-kvm").function("kvm_arch_process_async_events") {
+    printf("kvm_arch_process_async_events:\n")
+    print_ustack(ubacktrace())
+}
+
+# 
+# probe process("/usr/bin/qemu-kvm").function("*cpu_handle_ioreq*") {
+#     printf("cpu_handle_ioreq:\n")
+#     print_ustack(ubacktrace())
+# }

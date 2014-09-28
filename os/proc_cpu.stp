@@ -1,0 +1,23 @@
+global cpustat
+
+function div:string(a:long, b:long) {
+	total = a + b
+	mod = (100 * a) % total
+	return sprintf("%d.%d%%", (100 *a) / total, mod * 100 / total);
+}
+
+probe timer.profile {
+	cpustat[execname(), cpu(), tid()]++
+}
+
+probe begin {
+	printf("%20s %19s %5s\n", "process", "CPU", "TID")
+}
+
+probe timer.s(5) {
+	foreach ([p, c, t] in cpustat) {
+		printf("%20s %19s %5s\n", p, c, t)
+	}
+	
+	delete cpustat
+}

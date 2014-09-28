@@ -1,0 +1,9 @@
+#!/usr/bin/stap
+
+probe process("/usr/libexec/qemu-kvm").statement("*@gluster.c:339")
+{
+    printf("qemu_gluster_open ret: %d retry: %d \n", $ret, $retry)
+    if ($retry != 6) {
+        printf("retry work. good job\n")
+    } 	
+}

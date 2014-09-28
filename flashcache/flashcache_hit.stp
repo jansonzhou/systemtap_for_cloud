@@ -1,0 +1,10 @@
+
+
+probe module("flashcache").function("*read*"), module("flashcache").function("*write*") {
+	printf("func %s  \n", pn())
+}
+
+
+probe module("flashcache").function("*") {
+	printf("func %s  \n", pn())
+}

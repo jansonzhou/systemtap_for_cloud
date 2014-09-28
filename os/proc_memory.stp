@@ -1,0 +1,31 @@
+global process, uprocess
+
+probe kernel.function("sys_mmap") {
+	process[execname(), ppid(), pid(), cpu()] += $len
+}
+
+probe kernel.function("sys_munmap") {
+	uprocess[execname(), ppid(), pid(), cpu()] += $len
+}
+
+probe begin {
+	printf("%20s %5s %5s %11s %3s\n", "Process", "PPID", "PID", "SZ(Kb)", "CPU")
+}
+
+probe timer.s(5) {
+	foreach ([exec+, pprocid, procid, cps] in process) {
+		sizeKB = process[exec, pprocid, procid, cps] / 1024
+		printf("%20s %5d %5d +%11d %3d\n",
+			exec, pprocid, procid, sizeKB, cps)
+	}
+	
+	foreach ([exec+, pprocid, procid, cps] in uprocess) {
+		sizeKB = uprocess[exec, pprocid, procid, cps] / 1024
+		printf("%20s %5d %5d -%11d %3d\n",
+			exec, pprocid, procid, sizeKB, cps)
+	}
+	
+	delete process
+	delete uprocess
+}
+

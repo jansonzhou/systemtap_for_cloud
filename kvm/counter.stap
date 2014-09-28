@@ -1,0 +1,15 @@
+
+
+
+
+probe module("kvm").function("kvm_rr_perf_overflow_handler") {
+  printf("kvm_rr_perf_overflow_handler: ");
+  print_stack(backtrace());
+}
+
+
+probe kernel.function("x86_perf_event_update") {
+  printf("x86_perf_event_update: ");
+  print_stack(backtrace());
+}
+

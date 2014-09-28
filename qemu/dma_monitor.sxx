@@ -1,0 +1,72 @@
+//probe process("$^exec_path").function("*dma*") {
+//    printf("catch: %s\n", pn())
+//}
+
+//probe process("$^exec_path").function("virtio_submit_multiwrite") {
+//  printf("catch: %s\n", pn())
+//  print_ustack(ubacktrace())
+//}
+
+global fn_stats
+global addr_stats
+# //probe process("$exec_path").function("*bmdma*") {
+# probe process("/usr/bin/qemu").function("*bmdma*") {
+#   printf("catch: %s\n", pn())
+# }
+
+
+# probe process("/usr/bin/qemu-kvm").function("io_mem_read") {
+#     print_ustack(ubacktrace())
+#     printf("io_mem_read: addr %d, size %d\n", $addr, $size)
+#     addr_stats <<< $addr
+# }
+# 
+probe process("/usr/bin/qemu-kvm").function("ide*") {
+    printf("catch: %s\n", pn())
+    print_ustack(ubacktrace())
+    printf("\n")
+}
+
+
+
+probe process("/usr/bin/qemu-kvm").function("virtio_blk_req_complete") {
+    printf("catch: %s\n", pn())
+    //print_ustack(ubacktrace())
+    printf("\n")
+}
+
+
+# probe process("/usr/bin/qemu-kvm").function("address_space_rw") {
+#     printf("catch: %s\n", pn())
+#     print_ustack(ubacktrace())
+#     printf("\n")
+# }
+
+# probe process("/usr/bin/qemu-kvm").function("memory_region_read_accessor")
+# {
+#   printf("memory_region_ops_read: addr: %x , size: %d shift: %d\n", $addr, $size, $shift)
+# }
+
+
+# 
+# probe qemu.system.x86_64.memory_region_ops_read {
+#     printf("memory_region_ops_read: %s\n", pn())
+#     printf("\n")
+# }
+
+# probe process("/usr/bin/qemu-kvm").function("*bmdma*") {
+#     fn_stats[ubacktrace()] += 1
+#     print_ustack(ubacktrace())
+#     print_stack(backtrace())
+#     printf("\n")
+# }
+# 
+# probe timer.s(30) {
+#     foreach (qn+ in fn_stats) {
+#         print_ustack(qn)
+#         printf("%d\n", fn_stats[qn])
+#         printf("#######################\n")
+#     }
+#     
+#     println(@hist_log(addr_stats))
+# }

@@ -1,0 +1,31 @@
+global send_count, receive_count
+
+probe socket.send {
+	send_count[execname(), ppid(), pid(), cpu()] += size 
+}
+
+probe socket.receive {
+	receive_count[execname(), ppid(), pid(), cpu()] += size
+}
+
+probe begin {
+	printf("%20s %5s %5s %11s %3s\n", "Process", "PPID", "PID", "SZ(Kb)", "CPU")
+}
+
+probe timer.s(5) {
+	foreach ([exec+, pprocid, procid, cps] in send_count) {
+		sizeKB = send_count[exec, pprocid, procid, cps] / 1024
+		printf("%20s %5d %5d send:%11d %3d\n",
+			exec, pprocid, procid, sizeKB, cps)
+	}
+	
+	foreach ([exec+, pprocid, procid, cps] in receive_count) {
+		sizeKB = receive_count[exec, pprocid, procid, cps] / 1024
+		printf("%20s %5d %5d receive:%11d %3d\n",
+			exec, pprocid, procid, sizeKB, cps)
+	}
+	
+	delete send_count
+	delete receive_count
+}
+

@@ -1,0 +1,18 @@
+global bts
+
+probe module("kvm").function("*mmio*") {
+    bts[backtrace()] <<< 1
+}
+
+
+probe module("kvm_intel").function("*mmio*") {
+      bts[backtrace()] <<< 1
+}
+
+
+probe end {
+    foreach (bt in bts) {
+        print_stack(bt)
+        printf("\t%d\n", @count(bts[bt]))
+    }
+}

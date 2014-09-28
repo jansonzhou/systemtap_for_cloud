@@ -11,3 +11,8 @@ probe module("xfs").function("*read*"), module("xfs").function("*write*") {
 	printf("func %s  \n", pn())
 	print_backtrace()
 }
+
+probe module("xfs").function("*@fs/xfs/linux-2.6/xfs_lrw.c") {
+	printf("func %s  \n", pn())
+	print_backtrace()
+}

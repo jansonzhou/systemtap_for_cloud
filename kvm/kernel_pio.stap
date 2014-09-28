@@ -1,0 +1,21 @@
+global io_stats
+global io_stack
+
+probe module("kvm").function("kvm_fast_pio_out") {
+    printf("kvm_fast_pio_out: port %d\n", $port)
+    io_stats[$port] += 1
+    
+    io_stack[backtrace()] += 1
+    print_stack(backtrace())
+}
+
+probe end {
+    foreach(io+ in io_stats) {
+        printf("%x \t %d\n", io, io_stats[io])
+    }
+    
+    foreach(s+ in io_stack) {
+        print_stack(s)
+        printf("%d\n", io_stack[s])
+    }
+}
